@@ -26,6 +26,7 @@ GLuint createShaderProgram() {
 
     GLint success;
     char infoLog[512];
+    int random;
 
     //compiling
     GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
