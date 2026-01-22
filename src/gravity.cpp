@@ -1,4 +1,3 @@
-using namespace std;
 #include "glad/glad.h"
 #include <GLFW/glfw3.h>
 #include <iostream>
@@ -6,7 +5,6 @@ using namespace std;
 #include <thread>
 #include <chrono>
 #include <cmath>
-#include <iostream>
 #include "../circle.h"
 
 GLuint createShaderProgram() {
@@ -87,8 +85,7 @@ int main() {
     glfwGetWindowSize(window, &width, &height);
     /******************************************************************************/
 
-    Circle circle1(-0.5f , -0.5f, 0.05f, 120, width, height, 0.05f, 0.0f, .7f);
-    Circle circle2(0.5f , 0.5f, 0.1f, 120, width, height, -0.05f, 0.0f, 1.0f);
+    Circle circle(0.0f , 0.0f, 0.1f, 120, width, height);
     GLuint shaderProgram = createShaderProgram(); //creating shader program
     int colorLoc = glGetUniformLocation(shaderProgram, "uColor");
     int offsetLoc = glGetUniformLocation(shaderProgram, "uOffset"); //(program ID, offset variable name) : function returns the address of the variable specified within the specified program
@@ -98,28 +95,21 @@ int main() {
     while (!glfwWindowShouldClose(window)) {
         glClear(GL_COLOR_BUFFER_BIT);
 
-        //draw
         glUseProgram(shaderProgram); //order matters here
         glUniform3f(colorLoc, 1.0f, 0.0f, 0.0f); //function sets fragement color for procedding code
-        glUniform2f(offsetLoc, circle1.offSetX, circle1.offSetY);
-        circle1.drawCircle();
-        glUniform3f(colorLoc, 1.0f, 0.0f, 0.0f); //function sets fragement color for procedding code
-        glUniform2f(offsetLoc, circle2.offSetX, circle2.offSetY);
-        circle2.drawCircle();
+        glUniform2f(offsetLoc, circle.offSetX, circle.offSetY);
+        circle.drawCircle();
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
-        
-        //calculate
-        float currentTime = glfwGetTime();
-        float dt = currentTime - lastTime;
-        lastTime = currentTime;
-        circle1.computeGravity(circle2);
-        circle2.computeGravity(circle1);
-        circle1.updatePosition(dt);
-        circle2.updatePosition(dt);
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
-        cout << "circl1 offsetX " << circle1.offSetX << " | " << "circle1 offSetY " << circle1.offSetY << endl;
-        cout << "circl1 offsetY " << circle2.offSetX << " | " << "circle2 offSetY " << circle2.offSetY << endl;        
+        //calculate velocity first then position
+        float timeDisplacement = glfwGetTime() - lastTime;
+        lastTime = glfwGetTime();
+        if(circle.offSetY + circle.centerY >= -1){
+            circle.velocity += gravity * timeDisplacement;
+            circle.offSetY -= circle.velocity * timeDisplacement;
+        }
+        std::cout << circle.centerY + circle.offSetY << std::endl;
 
         glfwSwapBuffers(window);
         glfwPollEvents();
