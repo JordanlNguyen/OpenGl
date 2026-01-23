@@ -31,5 +31,8 @@ a = (v - v0) / t
 ### gravittional pull of 2 objects
 F = G((m1 * m2) / r^2)
 ### units
-- 1 unit = screenWidth/2
-- velolicties -> NDC / second
+- 1 unit = 0.001f $..$ 1 m
+- velolicties = 1 unit / 1 second
+- acceleration = 1 unit / second^2
+- mass = arbitrary 
+- G = tuned constant

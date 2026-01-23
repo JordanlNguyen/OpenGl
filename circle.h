@@ -16,16 +16,20 @@ class Circle{
         float offSetY;
         float velocityX;
         float velocityY;
-        float mass = 0.1f;
+        float mass = 0.9f;
         float fy = 0;
         float fx = 0;
         GLuint VAO;
         GLuint VBO;
         std::vector<float> vertices;  
         const float G = 1.0f;
+        GLuint arrowVAO;
+        GLuint arrowVBO;
+        std::vector<float> arrowVertices;
         
         Circle(float cX, float cY, float rad, int res, int screenWidth, int screenHeight, float vx, float vy, float m);
-        void drawCircle();
+        void drawCircle(int colorLoc, int offsetLoc);
+        void drawArrow(int colorLoc, int offsetLoc);
         void computeGravity(Circle &c2);
         void updatePosition(float dt);
 };

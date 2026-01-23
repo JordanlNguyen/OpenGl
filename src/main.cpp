@@ -7,6 +7,7 @@ using namespace std;
 #include <chrono>
 #include <cmath>
 #include <iostream>
+#include "../grid.h"
 #include "../circle.h"
 
 GLuint createShaderProgram() {
@@ -61,17 +62,25 @@ GLuint createShaderProgram() {
 
     return shaderProgram;
 }
-
+bool detectCollision(Circle &c1, Circle &c2){
+    //calculate distance of 2 bodies
+    float dx = c1.offSetX - c2.offSetX;
+    float dy = c1.offSetY - c2.offSetY;
+    float distance = sqrt(pow(dx,2) + pow(dy,2));
+    if(distance <= c1.radius + c2.radius) return true;
+    return false;
+}
 int main() {
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
     int width, height;
 
 
     //create window *************************************************************
-    GLFWwindow* window = glfwCreateWindow(800, 600, "OpenGL", nullptr, nullptr);
+    GLFWwindow* window = glfwCreateWindow(900, 900, "OpenGL", nullptr, nullptr);
     if (!window) {
         std::cerr << "Failed to create window\n";
         return -1;
@@ -87,8 +96,8 @@ int main() {
     glfwGetWindowSize(window, &width, &height);
     /******************************************************************************/
 
-    Circle circle1(-0.5f , -0.5f, 0.05f, 120, width, height, 0.05f, 0.0f, .7f);
-    Circle circle2(0.5f , 0.5f, 0.1f, 120, width, height, -0.05f, 0.0f, 1.0f);
+    Circle circle1(-0.0f , -0.0f, 0.09f, 120, width, height, 0.0f, 0.0f, 1.0f);
+    Circle circle2(0.9f , 0.0f, 0.04f, 120, width, height, -0.0f, -0.9f, 0.0123f);
     GLuint shaderProgram = createShaderProgram(); //creating shader program
     int colorLoc = glGetUniformLocation(shaderProgram, "uColor");
     int offsetLoc = glGetUniformLocation(shaderProgram, "uOffset"); //(program ID, offset variable name) : function returns the address of the variable specified within the specified program
@@ -100,26 +109,27 @@ int main() {
 
         //draw
         glUseProgram(shaderProgram); //order matters here
-        glUniform3f(colorLoc, 1.0f, 0.0f, 0.0f); //function sets fragement color for procedding code
-        glUniform2f(offsetLoc, circle1.offSetX, circle1.offSetY);
-        circle1.drawCircle();
-        glUniform3f(colorLoc, 1.0f, 0.0f, 0.0f); //function sets fragement color for procedding code
-        glUniform2f(offsetLoc, circle2.offSetX, circle2.offSetY);
-        circle2.drawCircle();
+        circle1.drawCircle(colorLoc, offsetLoc);
+        circle2.drawCircle(colorLoc, offsetLoc);
+        circle1.drawArrow(colorLoc, offsetLoc);
+        circle2.drawArrow(colorLoc, offsetLoc);
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        std::this_thread::sleep_for(std::chrono::milliseconds(16));
         
         //calculate
-        float currentTime = glfwGetTime();
-        float dt = currentTime - lastTime;
-        lastTime = currentTime;
-        circle1.computeGravity(circle2);
-        circle2.computeGravity(circle1);
-        circle1.updatePosition(dt);
-        circle2.updatePosition(dt);
+        if(!detectCollision(circle1, circle2)){
+            float currentTime = glfwGetTime();
+            float dt = currentTime - lastTime;
+            lastTime = currentTime;
+            circle1.computeGravity(circle2);
+            circle2.computeGravity(circle1);
+            circle1.updatePosition(dt);
+            circle2.updatePosition(dt);        
+            cout << "circl1 offsetX " << circle1.offSetX << " | " << "circle1 offSetY " << circle1.offSetY <<" | distance : " << sqrt(pow(circle1.offSetX - circle2.offSetX,2) + pow(circle2.offSetY - circle1.offSetY,2))<< endl;
+            cout << "circl1 offsetY " << circle2.offSetX << " | " << "circle2 offSetY " << circle2.offSetY << endl;  
+        }
 
-        cout << "circl1 offsetX " << circle1.offSetX << " | " << "circle1 offSetY " << circle1.offSetY << endl;
-        cout << "circl1 offsetY " << circle2.offSetX << " | " << "circle2 offSetY " << circle2.offSetY << endl;        
+      
 
         glfwSwapBuffers(window);
         glfwPollEvents();
