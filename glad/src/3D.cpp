@@ -16,7 +16,7 @@ using namespace std;
 struct Camera{
     float yaw = -90.0f;
     float pitch = 20.0f;
-    float radius = 60.0f;
+    float radius = 100.0f;
     double lastX = 400;
     double lastY = 300;
     bool firstMouse = true;
@@ -133,8 +133,8 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos){
     xoffset *= sensitivity;
     yoffset *= sensitivity;
 
-    cam->yaw   += xoffset;
-    cam->pitch += yoffset;
+    cam->yaw   -= xoffset;
+    cam->pitch -= yoffset;
 
     // clamp pitch
     cam->pitch = glm::clamp(cam->pitch, -89.0f, 89.0f);
@@ -149,10 +149,10 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 
 int main(int argc, char* argv[]) {
 
-    if(argc != 17) {
-        cerr << "ecpected 16 arguments" << endl;
-        return -1;
-    }
+    // if(argc != 17) {
+    //     cerr << "ecpected 16 arguments" << endl;
+    //     return -1;
+    // }
 
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
@@ -183,9 +183,15 @@ int main(int argc, char* argv[]) {
     int colorLoc = glGetUniformLocation(shaderProgram, "objectColor");
     Camera camera;
     glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)width / height, 0.1f, 500.0f); //maps and translates 3d coordinates to 2d screen print ; (field of view : vertical angle of camera lense, aspect ratio : keeps objects looking streched, near clipping plane : closest distance visible, far clippiing plane : furthest distance visible)
-    Sphere sphere1(atof(argv[5]), atof(argv[7]), atof(argv[9]), atof(argv[11]), atof(argv[13]), atof(argv[15]), atof(argv[3]), atof(argv[1]));
-    Sphere sphere2(atof(argv[6]), atof(argv[8]), atof(argv[10]), atof(argv[12]), atof(argv[14]), atof(argv[16]), atof(argv[4]), atof(argv[2]));
+    // Sphere sphere1(atof(argv[5]), atof(argv[7]), atof(argv[9]), atof(argv[11]), atof(argv[13]), atof(argv[15]), atof(argv[3]), atof(argv[1]));
+    // Sphere sphere2(atof(argv[6]), atof(argv[8]), atof(argv[10]), atof(argv[12]), atof(argv[14]), atof(argv[16]), atof(argv[4]), atof(argv[2]));
     Grid grid;
+    vector<Sphere> spheres = {
+        Sphere (0,0,0,0,0,0,10.0f, 10000.0f),
+        Sphere (35,0,0,-1,0,5,3,150),
+        Sphere (40,0,0,2,0,0,2,1)
+    };
+
 
     glfwSetWindowUserPointer(window, &camera);
     glfwSetCursorPosCallback(window, mouse_callback);
@@ -208,15 +214,19 @@ int main(int argc, char* argv[]) {
         glm::mat4 view = glm::lookAt(camera.cameraPos, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 
         grid.drawGrid(view, projection, colorLoc, shaderProgram, camera.cameraPos);
-        sphere1.drawSphere(view, projection, colorLoc, shaderProgram, camera.cameraPos);
-        sphere2.drawSphere(view, projection, colorLoc, shaderProgram, camera.cameraPos);
-
-        sphere1.computeGravity(sphere2);
-        sphere2.computeGravity(sphere1);
-
-        sphere1.updatePosition(dt);
-        sphere2.updatePosition(dt);
-
+        for(int i = 0; i < spheres.size(); ++i){
+            spheres[i].drawSphere(view, projection, colorLoc, shaderProgram, camera.cameraPos);
+        }
+        for(int i = 0; i < spheres.size(); ++i){
+            for(int j = 0; j < spheres.size(); ++j){
+                if(i != j){
+                    spheres[i].computeGravity(spheres[j]);
+                }
+            }
+        }
+        for(int i = 0; i < spheres.size(); ++i){
+            spheres[i].updatePosition(dt);
+        }
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
